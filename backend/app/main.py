@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from backend.app.api.v1 import api_router
 from backend.app.core.config import settings
 
 
@@ -12,6 +13,12 @@ app = FastAPI(
         "multi-agent workflows, business intelligence, automation, "
         "and enterprise knowledge management."
     ),
+)
+
+
+app.include_router(
+    api_router,
+    prefix=settings.api_v1_prefix,
 )
 
 
