@@ -7,6 +7,10 @@ from backend.app.models.user import User
 
 
 def require_role(*allowed_roles: str) -> Callable:
+    """
+    Require the authenticated user to have one of the specified roles.
+    """
+
     def role_checker(
         user: User = Depends(get_current_user),
     ) -> User:

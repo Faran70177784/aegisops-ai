@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
 
 from backend.app.api.dependencies import get_current_user
 from backend.app.db.database import get_db
@@ -24,7 +23,7 @@ router = APIRouter(
 )
 def login(
     request: LoginRequest,
-    db: Session = Depends(get_db),
+    db=Depends(get_db),
 ) -> TokenResponse:
     user = authenticate_user(
         db,

@@ -12,9 +12,7 @@ router = APIRouter(
 
 @router.get("/dashboard")
 def admin_dashboard(
-    user: User = Depends(
-        require_role("admin"),
-    ),
+    user: User = Depends(require_role("admin")),
 ) -> dict[str, str]:
     return {
         "message": "Welcome to the administrator dashboard.",
