@@ -42,7 +42,7 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication token.",
-        )
+        ) from None
 
     if user is None or not user.is_active:
         raise HTTPException(
