@@ -15,6 +15,10 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ) -> User:
+    """
+    Resolve the authenticated user from the JWT access token.
+    """
+
     token = credentials.credentials
 
     try:
@@ -34,7 +38,7 @@ def get_current_user(
 
         user = db.get(User, int(subject))
 
-    except (JWTError, ValueError):
+    except (JWTError, ValueError, TypeError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication token.",
