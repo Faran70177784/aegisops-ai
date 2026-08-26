@@ -1,5 +1,5 @@
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.database import Base
 
@@ -22,4 +22,10 @@ class Permission(Base):
     description: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,
+    )
+
+    roles = relationship(
+        "Role",
+        secondary="role_permissions",
+        back_populates="permissions",
     )

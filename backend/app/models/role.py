@@ -1,7 +1,23 @@
-from sqlalchemy import String
+from sqlalchemy import String, Table, Column, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.database import Base
+
+
+role_permissions = Table(
+    "role_permissions",
+    Base.metadata,
+    Column(
+        "role_id",
+        ForeignKey("roles.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column(
+        "permission_id",
+        ForeignKey("permissions.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)
 
 
 class Role(Base):
@@ -27,4 +43,10 @@ class Role(Base):
     users = relationship(
         "User",
         back_populates="role",
+    )
+
+    permissions = relationship(
+        "Permission",
+        secondary=role_permissions,
+        back_populates="roles",
     )
