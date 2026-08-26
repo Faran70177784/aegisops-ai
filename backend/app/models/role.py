@@ -19,6 +19,11 @@ class Role(Base):
         index=True,
     )
 
+    description: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
     users = relationship(
         "User",
         back_populates="role",
