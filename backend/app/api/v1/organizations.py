@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from backend.app.api.rbac import require_role
+from backend.app.api.rbac import require_permission
 from backend.app.db.database import get_db
 from backend.app.models.user import User
 from backend.app.schemas.organization import (
@@ -28,7 +28,9 @@ router = APIRouter(
 def create_organization(
     data: OrganizationCreate,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(
+        require_permission("organizations:create"),
+    ),
 ) -> OrganizationResponse:
     service = OrganizationService(db)
 
@@ -46,12 +48,7 @@ def create_organization(
 def list_organizations(
     db: Session = Depends(get_db),
     user: User = Depends(
-        require_role(
-            "admin",
-            "executive",
-            "manager",
-            "analyst",
-        ),
+        require_permission("organizations:read"),
     ),
 ) -> list[OrganizationResponse]:
     service = OrganizationService(db)
@@ -74,12 +71,7 @@ def get_organization(
     organization_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(
-        require_role(
-            "admin",
-            "executive",
-            "manager",
-            "analyst",
-        ),
+        require_permission("organizations:read"),
     ),
 ) -> OrganizationResponse:
     service = OrganizationService(db)
@@ -99,7 +91,9 @@ def update_organization(
     organization_id: int,
     data: OrganizationUpdate,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(
+        require_permission("organizations:update"),
+    ),
 ) -> OrganizationResponse:
     service = OrganizationService(db)
 
@@ -120,7 +114,9 @@ def update_organization(
 def delete_organization(
     organization_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(
+        require_permission("organizations:delete"),
+    ),
 ) -> None:
     service = OrganizationService(db)
 
