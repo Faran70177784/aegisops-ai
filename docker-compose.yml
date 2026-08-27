@@ -1,0 +1,66 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://aegisops:${POSTGRES_PASSWORD}@db:5432/aegisops
+      ENVIRONMENT: production
+      DEBUG: "false"
+      ALLOWED_HOSTS: localhost,127.0.0.1,api
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - aegisops
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: aegisops
+      POSTGRES_USER: aegisops
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aegisops -d aegisops"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - aegisops
+
+  redis:
+    image: redis:7-alpine
+    profiles: ["infra"]
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - aegisops
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    profiles: ["infra"]
+    restart: unless-stopped
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - aegisops
+
+volumes:
+  postgres_data:
+  redis_data:
+  qdrant_data:
+
+networks:
+  aegisops:
+    driver: bridge

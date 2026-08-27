@@ -16,25 +16,17 @@ def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def verify_password(
-    plain_password: str,
-    hashed_password: str,
-) -> bool:
-    return pwd_context.verify(
-        plain_password,
-        hashed_password,
-    )
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
 
 
-def create_access_token(
-    subject: str,
-) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=settings.access_token_expire_minutes
-    )
+def create_access_token(subject: str) -> str:
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(minutes=settings.access_token_expire_minutes)
 
     payload = {
         "sub": subject,
+        "iat": now,
         "exp": expire,
     }
 
@@ -52,13 +44,9 @@ def decode_access_token(token: str) -> str | None:
             settings.jwt_secret_key,
             algorithms=[settings.jwt_algorithm],
         )
-
         subject = payload.get("sub")
-
         if subject is None:
             return None
-
         return str(subject)
-
     except JWTError:
         return None

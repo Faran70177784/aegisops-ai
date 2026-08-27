@@ -7,18 +7,13 @@ from backend.app.core.config import settings
 from backend.app.db.database import get_db
 from backend.app.models.user import User
 
-
-security = HTTPBearer()
+security = HTTPBearer(auto_error=True)
 
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ) -> User:
-    """
-    Resolve the authenticated user from the JWT access token.
-    """
-
     token = credentials.credentials
 
     try:
@@ -27,17 +22,13 @@ def get_current_user(
             settings.jwt_secret_key,
             algorithms=[settings.jwt_algorithm],
         )
-
         subject = payload.get("sub")
-
         if subject is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid authentication token.",
             )
-
         user = db.get(User, int(subject))
-
     except (JWTError, ValueError, TypeError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

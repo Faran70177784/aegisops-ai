@@ -3,18 +3,23 @@ __pycache__/
 *.py[cod]
 *.pyo
 
-# Virtual environment
+# Virtual environments
 .venv/
 venv/
 env/
 
-# Environment variables
+# Environment and secrets
 .env
+*.pem
+*.key
+secrets/
 
-# Databases
+# Databases and local state
 *.db
 *.sqlite
 *.sqlite3
+
+aegisops.db
 
 # Logs
 logs/
@@ -25,31 +30,25 @@ data/processed/*
 data/raw/*
 storage/*
 
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
-
 # Testing
 .pytest_cache/
 .coverage
 htmlcov/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
 
 # Build
 build/
 dist/
 *.egg-info/
 
-# Node
+# Frontend
 node_modules/
+frontend/node_modules/
 
 # Docker
 docker-volumes/
-
-# Secrets
-*.pem
-*.key
-secrets/
