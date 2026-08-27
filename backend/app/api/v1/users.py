@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from backend.app.api.rbac import require_role
+from backend.app.api.rbac import require_permission
 from backend.app.db.database import get_db
 from backend.app.models.user import User
 from backend.app.schemas.user import (
@@ -26,13 +26,17 @@ router = APIRouter(
 def create_user(
     data: UserCreate,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(
+        require_permission("users:create"),
+    ),
 ) -> UserResponse:
     service = UserService(db)
 
     created_user = service.create(data)
 
-    return UserResponse.model_validate(created_user)
+    return UserResponse.model_validate(
+        created_user,
+    )
 
 
 @router.get(
@@ -42,12 +46,7 @@ def create_user(
 def list_users(
     db: Session = Depends(get_db),
     user: User = Depends(
-        require_role(
-            "admin",
-            "executive",
-            "manager",
-            "analyst",
-        ),
+        require_permission("users:read"),
     ),
 ) -> list[UserResponse]:
     service = UserService(db)
@@ -68,19 +67,16 @@ def get_user(
     user_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(
-        require_role(
-            "admin",
-            "executive",
-            "manager",
-            "analyst",
-        ),
+        require_permission("users:read"),
     ),
 ) -> UserResponse:
     service = UserService(db)
 
     target_user = service.get(user_id)
 
-    return UserResponse.model_validate(target_user)
+    return UserResponse.model_validate(
+        target_user,
+    )
 
 
 @router.patch(
@@ -91,7 +87,9 @@ def update_user(
     user_id: int,
     data: UserUpdate,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(
+        require_permission("users:update"),
+    ),
 ) -> UserResponse:
     service = UserService(db)
 
@@ -100,7 +98,9 @@ def update_user(
         data,
     )
 
-    return UserResponse.model_validate(updated_user)
+    return UserResponse.model_validate(
+        updated_user,
+    )
 
 
 @router.delete(
@@ -110,7 +110,9 @@ def update_user(
 def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(
+        require_permission("users:delete"),
+    ),
 ) -> None:
     service = UserService(db)
 
