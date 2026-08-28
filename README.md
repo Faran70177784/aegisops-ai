@@ -1,223 +1,80 @@
 # AegisOps AI
 
-AegisOps AI is an enterprise operations command-center foundation built around a versioned FastAPI backend, JWT authentication, role-based access control (RBAC), organization and user management, audit logging, and a production-oriented deployment baseline.
+AegisOps AI is an enterprise operations command center designed around secure APIs, RBAC, auditability, PostgreSQL, enterprise knowledge, RAG/search, AI/LLM services, agents/workflows, automation, analytics, and an operational dashboard.
 
-## Current release
+## Core stack
 
-**Version:** 1.0.0
+- Python 3.12+
+- FastAPI
+- SQLAlchemy 2
+- Alembic
+- PostgreSQL 16
+- Docker Compose
+- JWT authentication
+- RBAC and audit logging
+- Optional Redis and Qdrant infrastructure
+- Ollama-compatible LLM configuration
 
-### Completed work packages
-
-| Phase | Status |
-|---|---|
-| Authentication & JWT | Complete |
-| RBAC & permissions | Complete |
-| Organization management | Complete |
-| User management | Complete |
-| Database migrations | Complete |
-| Audit logging | Complete |
-| Security hardening | Complete |
-| API polish & documentation | Complete |
-| Production / Docker | Complete |
-| Final README | Complete |
-
-## Architecture
+## Repository areas
 
 ```text
-Client
-  |
-  v
-FastAPI /api/v1
-  |
-  +-- Authentication / JWT
-  +-- RBAC dependencies
-  +-- Organizations API
-  +-- Users API
-  +-- Administration / Audit Logs
-  |
-  v
-Service Layer
-  |
-  v
-Repository Layer
-  |
-  v
-SQLAlchemy 2.x
-  |
-  +-- PostgreSQL (production)
-  +-- SQLite (local development)
+backend/          FastAPI application
+agents/           Agent/workflow foundation
+rag/              Retrieval-augmented generation foundation
+search/           Search infrastructure
+knowledge_graph/  Knowledge graph foundation
+evaluation/       Evaluation foundation
+monitoring/       Monitoring foundation
+tools/            Tooling foundation
+database/         Migrations and seed scripts
+tests/            Automated tests
+docs/             Architecture, API, database and deployment documentation
+docker/           Container entrypoint
 ```
-
-## Security baseline
-
-- JWT access tokens with expiration and issued-at timestamps.
-- Password hashing with bcrypt.
-- RBAC enforcement at API boundaries.
-- Production validation for JWT secret, debug mode, and database configuration.
-- Security response headers and request IDs.
-- Optional CORS and Trusted Host controls.
-- Generic 401/403/500 responses without credential leakage.
-- Audit events for authentication and privileged CRUD operations.
-- Audit metadata intentionally excludes passwords and authentication tokens.
-- Secrets are supplied through environment variables and `.env` is ignored by Git.
-
-## Audit logging
-
-The audit trail records:
-
-- Successful and failed login attempts.
-- Organization creation, updates, and deletion.
-- User creation, updates, and deletion.
-- Acting user ID when authenticated.
-- Request IP address and User-Agent where available.
-- Resource/action metadata useful for investigations.
-
-Administrative endpoints:
-
-- `GET /api/v1/admin/audit-logs`
-- `GET /api/v1/admin/audit-logs/{audit_log_id}`
-
-Audit-log access is restricted to the `admin` role.
-
-## API
-
-When documentation is enabled:
-
-- Swagger UI: `/docs`
-- ReDoc: `/redoc`
-- OpenAPI schema: `/openapi.json`
-
-Core endpoints:
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/` | Application information |
-| GET | `/health` | Health check |
-| POST | `/api/v1/auth/login` | Login |
-| GET | `/api/v1/auth/me` | Current authenticated user |
-| GET/POST | `/api/v1/organizations` | List/create organizations |
-| GET/PATCH/DELETE | `/api/v1/organizations/{id}` | Read/update/delete organization |
-| GET/POST | `/api/v1/users` | List/create users |
-| GET/PATCH/DELETE | `/api/v1/users/{id}` | Read/update/delete user |
-| GET | `/api/v1/admin/dashboard` | Admin dashboard |
-| GET | `/api/v1/admin/audit-logs` | Audit-log search |
-| GET | `/api/v1/admin/audit-logs/{id}` | Audit-log detail |
-
-See `docs/api/API.md` for request examples and RBAC behavior.
 
 ## Local development
 
-### 1. Create environment
+Create a virtual environment and install dependencies:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Copy `.env.example` to `.env` and set a local development configuration.
+Copy `.env.example` to `.env` and configure local values.
 
-### 2. Create/update the database
-
-```powershell
-alembic upgrade head
-```
-
-### 3. Seed RBAC data
+## Docker
 
 ```powershell
-python database/seeds/seed_rbac.py
-python database/seeds/seed_permissions.py
-python database/seeds/seed_admin.py
-python database/seeds/seed_rbac_users.py
+docker compose up -d
+docker compose exec api alembic upgrade head
+docker compose ps
 ```
 
-### 4. Run the API
+Health check:
 
 ```powershell
-uvicorn backend.app.main:app --reload
+Invoke-WebRequest http://localhost:8000/health -UseBasicParsing
 ```
 
-### 5. Run tests
+API documentation is available at `http://localhost:8000/docs` when `DOCS_ENABLED=true`.
+
+## RBAC seed data
+
+Run seeds from the project root inside the API container:
 
 ```powershell
-python -m pytest tests -v
+docker compose exec api python -m database.seeds.seed_rbac
+docker compose exec api python -m database.seeds.seed_permissions
+docker compose exec api python -m database.seeds.seed_admin
+docker compose exec api python -m database.seeds.seed_rbac_users
 ```
 
-## Docker / production baseline
+## Production
 
-Production uses PostgreSQL and runs Alembic migrations before starting Uvicorn.
+Read `PRODUCTION_HARDENING.md` and `docs/deployment/PRODUCTION_RUNBOOK.md` before deployment. Production must use PostgreSQL, a strong JWT secret, restricted hosts/CORS, secure secret management, TLS at the edge, backups, monitoring, and controlled migrations.
 
-1. Copy `.env.example` to `.env`.
-2. Set a strong `JWT_SECRET_KEY` (32+ random characters).
-3. Set a strong `POSTGRES_PASSWORD`.
-4. Configure `CORS_ORIGINS` and `ALLOWED_HOSTS` for the deployed domains.
-5. Start the stack:
+## Security
 
-```bash
-docker compose up --build -d
-```
-
-Optional Redis and Qdrant infrastructure is available through the `infra` profile:
-
-```bash
-docker compose --profile infra up --build -d
-```
-
-See `docs/deployment/PRODUCTION.md` for operational guidance.
-
-## Database migrations
-
-Current migration head:
-
-`0906a1e85550_create_audit_logs`
-
-Useful commands:
-
-```powershell
-alembic current
-alembic check
-alembic upgrade head
-alembic downgrade -1
-```
-
-## Project structure
-
-```text
-AegisOps AI/
-├── backend/app/
-│   ├── api/
-│   │   ├── dependencies.py
-│   │   ├── rbac.py
-│   │   └── v1/
-│   ├── core/
-│   ├── db/
-│   ├── middleware/
-│   ├── models/
-│   ├── repositories/
-│   ├── schemas/
-│   ├── services/
-│   └── utils/
-├── database/
-│   ├── migrations/
-│   └── seeds/
-├── docs/
-├── docker/
-├── tests/
-├── Dockerfile
-├── docker-compose.yml
-├── Makefile
-├── requirements.txt
-└── README.md
-```
-
-## Engineering notes
-
-The repository follows a layered architecture so API concerns, business logic, persistence, schemas, and security dependencies remain separated. Audit logging is implemented as a reusable service and is invoked by privileged application operations.
-
-For production, use PostgreSQL rather than SQLite, keep secrets outside source control, terminate TLS at the deployment edge, configure a trusted host allow-list, and centralize logs/metrics in the infrastructure environment.
-
-## License
-
-See `LICENSE`.
+Do not commit `.env`, credentials, tokens, database files, private keys, or generated secrets. See `SECURITY.md` and `PRODUCTION_HARDENING.md`.
